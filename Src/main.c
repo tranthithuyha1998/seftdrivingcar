@@ -22,12 +22,12 @@
 		
 	-------------------------------
 	MOTOR DC SERVO - pwm: PE9,   DIR: PE11
-	M1 --- PE9 (PWM)
-	M2 --- PE11	(DIR)
+	M1 ->> OUT4 -->> M4 -->> PE9 (PWM)
+	M2 ->> OUT3 -->> M3 -->> PE11	(DIR)
 	
 	-------------------------------
 	MOTOR RC SERVO
-	PWM --- PA0 (MAU CAM)
+	PWM --- PA5 (MAU CAM)
 	
 	-------------------------------
 		UART2(STM) ---- (USB)
@@ -84,10 +84,12 @@ volatile float distance1=0, distance2=0, distance3=0, distance4=0;
 signed int upper_limit_sensor=20;
 // volatile unsigned int count_spin=0,count_lost=0,count_track=0;
 // volatile int error_Position=0,error_Distance=0;
-uint8_t receivebuffer[9],isTracking;
+uint8_t receivebuffer[6], transmitData[2];
+
+uint8_t isStart=0, SttSpeed=0;
 // volatile int pwm_L=0,pwm_R=0;
 // vr for uart
-float k[4];
+float k[2]; // k[0] truoc cham, k[1] sau cham -> k[0],k[1] (float)
 uint16_t pre_enc=0;
 float dt=0.1F;
 // vr for encoder
@@ -96,7 +98,7 @@ float dt=0.1F;
 // vr for servo
 float SERVO_MICROS_MAX = 2.5;
 float SERVO_MICRO_MIN = 0.5;
-
+int32_t pulse_length;
 float x=0.2;
 
 // vr for sonar sensor
@@ -131,6 +133,8 @@ float p[3]={0,0,0}, dp[3]={1,1,1};
 
 // float cte, pre_cte, diff_cte, err;
 
+float v = 2.12F;
+float errorRcv;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -148,14 +152,15 @@ void PWM_servo(int16_t rota);
 void PWM_DC_Servo(int16_t value);
 void delay (uint32_t us);
 float twiddle(float *p, float *dp, float err);
-float PID_Controller(float k[], uint16_t speed, float params[], uint16_t n);
+float PID_Controller(float errorRcv, uint8_t Sttspeed, float params[], uint16_t n);
 
 //ham xuat dong co, rota(cam)  ----- PA0 	
 void PWM_servo(int16_t rota)
 {
-	rota+=90;
-	  int32_t pulse_length= (2.0F*(float)rota/180.0F+0.5F)*50.0F; //25->125
-	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (int16_t)(pulse_length));
+	rota+=90.0F;
+	  pulse_length=((2.0F*(float)rota)/180.0F+0.5F)*50.0F;
+//	  pulse_length= (2.0F*(float)rota/180.0F+0.5F)*50.0F; //25->125
+	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (int16_t)pulse_length);
 }
 
 // control dc servo ----- pwm: PE9,   DIR: PE11
@@ -200,31 +205,40 @@ float hcsr04_read (uint16_t GPIO_TRIGGER, uint16_t GPIO_ECHO)
 	return local_time*0.0526/2;
 }
 
-
+// get velocity
 float velocity()
 {
 	uint16_t enc= TIM8->CNT;
 	TIM8->CNT=0;
-	return(enc/0.1F);
+	return(enc*pi/374.0F);
 }
 
+//float polyeval(float k[], double x)
+//{
+//	float y=0;
+//	for(int i=0; i< 3 ; i++ )
+//	y+=k[i]*powf(x,3-i);
+//	return y;
+//	}
 
-float polyeval(float k[], double x)
-{
-	float y=0;
-	for(int i=0; i< 3 ; i++ )
-	y+=k[i]*powf(x,3-i);
-	return y;
-	}
-
+	/*
+	fast => speed 400
+	slow => speed 200
+	*/
 	
-float PID_Controller(float k[], uint16_t speed, float params[], uint16_t n)
+float PID_Controller(float cte, uint8_t Sttspeed, float params[], uint16_t n)
 {
-	float cte, diff_cte;
-	pre_cte = polyeval(k, 0);
+	
+	float diff_cte;
+	uint16_t speed;
+	if(Sttspeed==1)
+		speed=900;
+	else if(Sttspeed==0)
+		speed=400;
+//	pre_cte = polyeval(k, 0);
 	
 	f++;
-	cte = polyeval(k, 0);
+//	cte = polyeval(k, 0);
 	diff_cte=cte-pre_cte;
 	int_cte+=cte;
 	pre_cte=cte;
@@ -234,7 +248,7 @@ float PID_Controller(float k[], uint16_t speed, float params[], uint16_t n)
 		steer= 50.0F*steer/(fabs(steer));
 	}
 	PWM_DC_Servo(speed);
-	PWM_servo(steer);
+  PWM_servo(steer);
 	
 	if(f>=n)
 	{
@@ -246,7 +260,6 @@ float PID_Controller(float k[], uint16_t speed, float params[], uint16_t n)
 	}
 	return err/n;
 }
-
 
 float twiddle(float *p, float *dp, float err)
 {
@@ -346,7 +359,7 @@ int main(void)
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_TIM_Encoder_Start(&htim8,TIM_CHANNEL_1);
 //	HAL_TIM_Base_Start(&htim4);
-	HAL_UART_Receive_DMA(&huart2,&receivebuffer[0],9);
+	HAL_UART_Receive_DMA(&huart2,&receivebuffer[0],6);
 	//SetPWM_Forward_Backward((int)0);
 	//SetPWM_Forward_Backward((int)0);
 
@@ -355,13 +368,10 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	//__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1,(2*90)/90+0.5);
-	PWM_servo(0);
 	//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET);
   while (1)
   {		
-
-
-		
+	
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -811,25 +821,29 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		// TRIGGER: D10 --- ECHO: B10
 		// TRIGGER: D11 --- ECHO: B11
 	
-	
 		// Get data from Raspberrry through UART
+		v = velocity();
 		
-		 isTracking=receivebuffer[0];
-		 float v = velocity();
-
-		// isTracking=1;
-		if (isTracking==1)
-		{
-			k[0] = (int16_t)(((int16_t)receivebuffer[1]<<8)|(int16_t)receivebuffer[2]);
-			k[1] = (int16_t)(((int16_t)receivebuffer[3]<<8)|(int16_t)receivebuffer[4]);
-			k[2] = (int16_t)(((int16_t)receivebuffer[5]<<8)|(int16_t)receivebuffer[6]);
-			k[3] = (int16_t)(((int16_t)receivebuffer[7]<<8)|(int16_t)receivebuffer[8]);
+		
+		transmitData[0]=(int)v;
+		transmitData[1]=(int)((v-transmitData[0])*100);
+		HAL_UART_Transmit(&huart2, &transmitData[0], 2, 1);
+		
+			k[0] = (int16_t)(((int16_t)receivebuffer[0]<<8)|(int16_t)receivebuffer[1]);
+			k[1] = (int16_t)(((int16_t)receivebuffer[2]<<8)|(int16_t)receivebuffer[3]);
+			isStart = receivebuffer[4];
+			SttSpeed = receivebuffer[5];
+				
 			
+		// isStart=1;
+		if (isStart==1)
+		{
+			errorRcv = k[0] + k[1]/10000.0F;
 			upper_limit_sensor =30;
 			if(distance1>upper_limit_sensor && distance2>upper_limit_sensor+10 && 
 				distance3>upper_limit_sensor)
 			{
-				error=PID_Controller(k, 2, p, 200);
+				error=PID_Controller(errorRcv, SttSpeed, p, 200);
 				
 				sum_dp = dp[0]+dp[1]+dp[2];
 				if ((sum_dp>=0.2F) && (f==0))
