@@ -22,8 +22,8 @@
 		
 	-------------------------------
 	MOTOR DC SERVO - pwm: PE9,   DIR: PE11
-	M1 ->> OUT4 -->> M4 -->> PE9 (PWM)
-	M2 ->> OUT3 -->> M3 -->> PE11	(DIR)
+	M1 ->> OUT4 -->> IN4 -->> PE9 (PWM)
+	M2 ->> OUT3 -->> IN3 -->> PE11	(DIR)
 	
 	-------------------------------
 	MOTOR RC SERVO
@@ -100,29 +100,15 @@ float SERVO_MICROS_MAX = 2.5;
 float SERVO_MICRO_MIN = 0.5;
 int32_t pulse_length;
 float x=0.2;
-
-// vr for sonar sensor
-// uint16_t local_time;
-// uint32_t timeout=0;
-
-// vr for control
 uint16_t f=0;
 float pre_cte, int_cte=0, err=0, steer;
 
-// float carPosX, carPosY;
-// uint16_t dstX, dstY;
-// double dx, dy;
-// double angle;
 double pi=3.1415927;
-// float KP=10, KI=10, KD=10;
+
 float error;
 float Ts=0.1;
-// float PID, P,I, D;
-// float duty;
-// float gain =1, bias=78;
+
 uint8_t flag_stop;
-// float a=0,b=1;
-// float d[3];
 
 // variables for twiddle
 uint8_t flag_td=1; // flag twiddle
@@ -248,7 +234,7 @@ float PID_Controller(float cte, uint8_t Sttspeed, float params[], uint16_t n)
 		steer= 50.0F*steer/(fabs(steer));
 	}
 	PWM_DC_Servo(speed);
-  PWM_servo(steer);
+  PWM_servo(0);
 	
 	if(f>=n)
 	{
@@ -811,19 +797,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	{	
 		distance1 = hcsr04_read(GPIO_PIN_9, GPIO_PIN_9);
 		distance2 = hcsr04_read(GPIO_PIN_10, GPIO_PIN_10);
-	  distance3 =  hcsr04_read(GPIO_PIN_10, GPIO_PIN_10);
+	  distance3 =  hcsr04_read(GPIO_PIN_11, GPIO_PIN_11);
 		
-//		a +=b;
-//		if(a>=45) b=-1;
-//		if(a<=-45) b=1;
 		
-		// TRIGGER: D9 --- ECHO: B9
-		// TRIGGER: D10 --- ECHO: B10
-		// TRIGGER: D11 --- ECHO: B11
-	
 		// Get data from Raspberrry through UART
 		v = velocity();
-		
 		
 		transmitData[0]=(int)v;
 		transmitData[1]=(int)((v-transmitData[0])*100);
@@ -833,7 +811,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			k[1] = (int16_t)(((int16_t)receivebuffer[2]<<8)|(int16_t)receivebuffer[3]);
 			isStart = receivebuffer[4];
 			SttSpeed = receivebuffer[5];
-				
+			isStart=1;
+			SttSpeed=0;
 			
 		// isStart=1;
 		if (isStart==1)
