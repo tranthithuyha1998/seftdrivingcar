@@ -16,14 +16,15 @@
   *
   ******************************************************************************
 	SENSOR SONAR
+	VCC: 5V
 	TRIGGER: D9 --- ECHO: B9
 	TRIGGER: D10 --- ECHO: B10
 	TRIGGER: D11 --- ECHO: B11
 		
 	-------------------------------
 	MOTOR DC SERVO - pwm: PE9,   DIR: PE11
-	M1 ->> OUT4 -->> IN4 -->> PE9 (PWM)
-	M2 ->> OUT3 -->> IN3 -->> PE11	(DIR)
+	M1(red) 	->> OUT4 -->> IN4 -->> PE9 (PWM)
+	M2(white) ->> OUT3 -->> IN3 -->> PE11	(DIR)
 	
 	-------------------------------
 	MOTOR RC SERVO
@@ -31,8 +32,13 @@
 	
 	-------------------------------
 		UART2(STM) ---- (USB)
-		PA2 (TX) ---- RX 
+		PA2 (TX) ---- RX
 		PA3 (RX) ---- TX
+		
+ ------------------------------
+	ENCODER
+		PC6 
+		PC7
 		
 */
 
@@ -78,6 +84,8 @@ DMA_HandleTypeDef hdma_usart2_rx;
 // uint16_t echo_sensor1=0, echo_sensor2=0, echo_sensor3=0, echo_sensor4=0;
 // volatile unsigned int en_sensor1=0, en_sensor2=0, en_sensor3=0, en_sensor4=0;
 volatile float distance1=0, distance2=0, distance3=0, distance4=0;
+volatile uint16_t local_time=0;
+uint8_t ss=0;
 // volatile float alpha=0; 
 // volatile double current_speed_left=0, current_speed_right=0;
 // unsigned int TIM_Period=399;
@@ -96,8 +104,8 @@ float dt=0.1F;
 // uint16_t encCounter;
 // uint16_t vantoc;
 // vr for servo
-float SERVO_MICROS_MAX = 2.5;
-float SERVO_MICRO_MIN = 0.5;
+float SERVO_MICROS_MAX = 2.5F;
+float SERVO_MICRO_MIN = 0.5F;
 int32_t pulse_length;
 float x=0.2;
 uint16_t f=0;
@@ -134,17 +142,22 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM8_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
-void PWM_servo(int16_t rota);
+void PWM_servo(float rota);
 void PWM_DC_Servo(int16_t value);
 void delay (uint32_t us);
 float twiddle(float *p, float *dp, float err);
 float PID_Controller(float errorRcv, uint8_t Sttspeed, float params[], uint16_t n);
 
 //ham xuat dong co, rota(cam)  ----- PA0 	
-void PWM_servo(int16_t rota)
+void PWM_servo(float rota)
 {
-	rota+=90.0F;
-	  pulse_length=((2.0F*(float)rota)/180.0F+0.5F)*50.0F;
+	if (fabs(rota)>50.0F)
+	{
+		rota= 50.0F*rota/(fabs(rota));
+	}	
+	rota+=100.5F;
+
+	  pulse_length=(((SERVO_MICROS_MAX-SERVO_MICRO_MIN)*(float)rota)/180.0F+SERVO_MICRO_MIN)*50.0F;
 //	  pulse_length= (2.0F*(float)rota/180.0F+0.5F)*50.0F; //25->125
 	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (int16_t)pulse_length);
 }
@@ -166,11 +179,11 @@ void PWM_DC_Servo(int16_t value)
 	}
 }
 
-
 // read sonar sensor
 float hcsr04_read (uint16_t GPIO_TRIGGER, uint16_t GPIO_ECHO)
 {
-	uint16_t local_time=0;
+	local_time=0;
+//	DWT_Delay(100);
 	// uint16_t timeout=0;
 	// HAL_GPIO_WritePin(GPIOD, GPIO_TRIGGER, GPIO_PIN_RESET);  // pull the TRIG pin HIGH
 	// DWT_Delay_us(2);  // wait for 2 us
@@ -229,10 +242,10 @@ float PID_Controller(float cte, uint8_t Sttspeed, float params[], uint16_t n)
 	int_cte+=cte;
 	pre_cte=cte;
 	steer=-params[0]*cte-params[2]*int_cte-params[1]*diff_cte;
-	if (fabs(steer)>50.0F)
-	{
-		steer= 50.0F*steer/(fabs(steer));
-	}
+//	if (fabs(steer)>50.0F)
+//	{
+//		steer= 50.0F*steer/(fabs(steer));
+//	}
 	PWM_DC_Servo(speed);
   PWM_servo(0);
 	
@@ -306,6 +319,7 @@ float twiddle(float *p, float *dp, float err)
   * @retval int
   */
 int main(void)
+
 {
   /* USER CODE BEGIN 1 */
 
@@ -794,14 +808,18 @@ static void MX_GPIO_Init(void)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim->Instance==htim3.Instance)
-	{	
+	{
+		ss=(ss+1)%3;
+		if(ss==0)
 		distance1 = hcsr04_read(GPIO_PIN_9, GPIO_PIN_9);
+		else if (ss==1)
 		distance2 = hcsr04_read(GPIO_PIN_10, GPIO_PIN_10);
-	  distance3 =  hcsr04_read(GPIO_PIN_11, GPIO_PIN_11);
-		
+		else
+		distance3 =  hcsr04_read(GPIO_PIN_11, GPIO_PIN_11);
 		
 		// Get data from Raspberrry through UART
 		v = velocity();
+	
 		
 		transmitData[0]=(int)v;
 		transmitData[1]=(int)((v-transmitData[0])*100);
@@ -811,8 +829,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			k[1] = (int16_t)(((int16_t)receivebuffer[2]<<8)|(int16_t)receivebuffer[3]);
 			isStart = receivebuffer[4];
 			SttSpeed = receivebuffer[5];
-			isStart=1;
-			SttSpeed=0;
+			//isStart=1;
+		 //	SttSpeed=0;
 			
 		// isStart=1;
 		if (isStart==1)
