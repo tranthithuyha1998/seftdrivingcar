@@ -123,11 +123,12 @@ uint8_t flag_td=1; // flag twiddle
 uint8_t td=0; 
 uint16_t it =0;
 float sum_dp, best_err;
-float p[3]={0,0,0}, dp[3]={1,1,1};
+float p[3]={0,0,0}, dp[3]={1,1,1};																																																																																																																													
 
 // float cte, pre_cte, diff_cte, err;
 
 float v = 2.12F;
+float cte;
 float errorRcv;
 /* USER CODE END PV */
 
@@ -183,7 +184,7 @@ void PWM_DC_Servo(int16_t value)
 float hcsr04_read (uint16_t GPIO_TRIGGER, uint16_t GPIO_ECHO)
 {
 	local_time=0;
-//	DWT_Delay(100);
+	//	DWT_Delay(100);
 	// uint16_t timeout=0;
 	// HAL_GPIO_WritePin(GPIOD, GPIO_TRIGGER, GPIO_PIN_RESET);  // pull the TRIG pin HIGH
 	// DWT_Delay_us(2);  // wait for 2 us
@@ -211,6 +212,7 @@ float velocity()
 	TIM8->CNT=0;
 	return(enc*pi/374.0F);
 }
+//--------------------- 14/05/2020-------------------
 
 //float polyeval(float k[], double x)
 //{
@@ -225,7 +227,7 @@ float velocity()
 	slow => speed 200
 	*/
 	
-float PID_Controller(float cte, uint8_t Sttspeed, float params[], uint16_t n)
+float PID_Controller(float errorRcv, uint8_t Sttspeed, float params[], uint16_t n)
 {
 	
 	float diff_cte;
@@ -234,20 +236,21 @@ float PID_Controller(float cte, uint8_t Sttspeed, float params[], uint16_t n)
 		speed=900;
 	else if(Sttspeed==0)
 		speed=400;
-//	pre_cte = polyeval(k, 0);
-	
+		pre_cte = cte;
+	//pre_cte = polyeval(k, 0);
 	f++;
+		cte = errorRcv;
 //	cte = polyeval(k, 0);
 	diff_cte=cte-pre_cte;
 	int_cte+=cte;
 	pre_cte=cte;
 	steer=-params[0]*cte-params[2]*int_cte-params[1]*diff_cte;
-//	if (fabs(steer)>50.0F)
-//	{
-//		steer= 50.0F*steer/(fabs(steer));
-//	}
+	if (fabs(steer)>50.0F)
+	{
+		steer= 50.0F*steer/(fabs(steer));
+	}
 	PWM_DC_Servo(speed);
-  PWM_servo(0);
+  PWM_servo(steer);
 	
 	if(f>=n)
 	{
@@ -262,17 +265,18 @@ float PID_Controller(float cte, uint8_t Sttspeed, float params[], uint16_t n)
 
 float twiddle(float *p, float *dp, float err)
 {
-//	p[0]=p[1]=p[2]=0;
-//	float dp[3]={1,1,1};
-//	float best_err= PID_Controller(k2.0, p, 100);
+	//p[0]=p[1]=p[2]=0;
+  //dp[0]=dp[1]=dp[2]=1;
+	//float best_err= PID_Controller(errorRcv,2.0, p, 100);
 
-//	if (sum_dp<0.2)
-//		return -1;
+	//if (sum_dp<0.2)
+		//return -1;
 
 	if (flag_td==1)
 	{
 		p[td] +=dp[td];
-		// err= PID_Controller(k,2.0,p,100);
+		 //err= PID_Controller(errorRcv,2.0,p,100);
+		
 		if (err<best_err)
 		{
 			best_err=err;
@@ -288,7 +292,8 @@ float twiddle(float *p, float *dp, float err)
 	{
 		flag_td=1;
 		p[td]-=2*dp[td];
-		// err= PID_Controller(k,2.0,p,100);
+	//	err= PID_Controller(errorRcv,2.0,p,100);
+		
 		if (err<best_err)
 		{
 			best_err =err;
@@ -301,6 +306,7 @@ float twiddle(float *p, float *dp, float err)
 		}
 		td=(td+1)%3;
 	}
+	//sum_dp=dp[2]+dp[1]+dp[0];
 //	sum_dp=dp[2]+dp[1]+dp[0];
 	it++;
 	
@@ -319,7 +325,6 @@ float twiddle(float *p, float *dp, float err)
   * @retval int
   */
 int main(void)
-
 {
   /* USER CODE BEGIN 1 */
 
@@ -809,6 +814,7 @@ static void MX_GPIO_Init(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim->Instance==htim3.Instance)
 	{
+		/*
 		ss=(ss+1)%3;
 		if(ss==0)
 		distance1 = hcsr04_read(GPIO_PIN_9, GPIO_PIN_9);
@@ -816,7 +822,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		distance2 = hcsr04_read(GPIO_PIN_10, GPIO_PIN_10);
 		else
 		distance3 =  hcsr04_read(GPIO_PIN_11, GPIO_PIN_11);
-		
+		*/
+		distance1 = 100;
+		distance2 = 100;
+		distance3 = 100;
 		// Get data from Raspberrry through UART
 		v = velocity();
 	
@@ -825,27 +834,30 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		transmitData[1]=(int)((v-transmitData[0])*100);
 		HAL_UART_Transmit(&huart2, &transmitData[0], 2, 1);
 		
-			k[0] = (int16_t)(((int16_t)receivebuffer[0]<<8)|(int16_t)receivebuffer[1]);
-			k[1] = (int16_t)(((int16_t)receivebuffer[2]<<8)|(int16_t)receivebuffer[3]);
-			isStart = receivebuffer[4];
+   k[0] = receivebuffer[0];
+			//k[0] = (int16_t)(((int16_t)receivebuffer[0]<<8)|(int16_t)receivebuffer[1]);
+		//	k[1] = (int16_t)(((int16_t)receivebuffer[2]<<8)|(int16_t)receivebuffer[3]);
+			//isStart = receivebuffer[4];
 			SttSpeed = receivebuffer[5];
-			//isStart=1;
-		 //	SttSpeed=0;
+			isStart=1;
+		 	SttSpeed=0;
 			
 		// isStart=1;
 		if (isStart==1)
 		{
-			errorRcv = k[0] + k[1]/10000.0F;
+			errorRcv = k[0]-50.0F;
+			//cte = k[0] + k[1]/10000.0F;
 			upper_limit_sensor =30;
 			if(distance1>upper_limit_sensor && distance2>upper_limit_sensor+10 && 
 				distance3>upper_limit_sensor)
 			{
-				error=PID_Controller(errorRcv, SttSpeed, p, 200);
+				//float p[3]={1,0.1,0};
+				err=PID_Controller(errorRcv, SttSpeed, p, 20);
 				
 				sum_dp = dp[0]+dp[1]+dp[2];
 				if ((sum_dp>=0.2F) && (f==0))
 				{
-					twiddle(p, dp, error);
+					twiddle(p, dp, err);
 				}
 			}
 			// co vat can
@@ -863,6 +875,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		}
 	}
 }
+
 
 
 /* USER CODE END 4 */
