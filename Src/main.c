@@ -92,8 +92,8 @@ uint8_t ss=0;
 signed int upper_limit_sensor=20;
 // volatile unsigned int count_spin=0,count_lost=0,count_track=0;
 // volatile int error_Position=0,error_Distance=0;
-uint8_t receivebuffer[6], transmitData[2];
-
+uint8_t receivebuffer[6], transmitData[3];
+uint8_t Obstacle=0;
 uint8_t isStart=0, SttSpeed=0;
 // volatile int pwm_L=0,pwm_R=0;
 // vr for uart
@@ -325,7 +325,7 @@ float twiddle(float *p, float *dp, float err)
   * @retval int
   */
 int main(void)
-{
+																{
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -823,36 +823,36 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		else
 		distance3 =  hcsr04_read(GPIO_PIN_11, GPIO_PIN_11);
 		*/
+		
 		distance1 = 100;
 		distance2 = 100;
 		distance3 = 100;
 		// Get data from Raspberrry through UART
 		v = velocity();
 	
+		//v = 100.60;
+
 		
-		transmitData[0]=(int)v;
-		transmitData[1]=(int)((v-transmitData[0])*100);
-		HAL_UART_Transmit(&huart2, &transmitData[0], 2, 1);
 		
-   k[0] = receivebuffer[0];
+			k[0] = receivebuffer[0];
 			//k[0] = (int16_t)(((int16_t)receivebuffer[0]<<8)|(int16_t)receivebuffer[1]);
-		//	k[1] = (int16_t)(((int16_t)receivebuffer[2]<<8)|(int16_t)receivebuffer[3]);
-			//isStart = receivebuffer[4];
+			//k[1] = (int16_t)(((int16_t)receivebuffer[2]<<8)|(int16_t)receivebuffer[3]);
+			isStart = receivebuffer[4];
 			SttSpeed = receivebuffer[5];
-			isStart=1;
-		 	SttSpeed=0;
+			//isStart=1;
+		 	//SttSpeed=0;
 			
-		// isStart=1;
+	
 		if (isStart==1)
 		{
 			errorRcv = k[0]-50.0F;
-			//cte = k[0] + k[1]/10000.0F;
 			upper_limit_sensor =30;
 			if(distance1>upper_limit_sensor && distance2>upper_limit_sensor+10 && 
 				distance3>upper_limit_sensor)
 			{
+				Obstacle =0;
 				//float p[3]={1,0.1,0};
-				err=PID_Controller(errorRcv, SttSpeed, p, 20);
+				err=PID_Controller(errorRcv, SttSpeed, p, 15);
 				
 				sum_dp = dp[0]+dp[1]+dp[2];
 				if ((sum_dp>=0.2F) && (f==0))
@@ -863,16 +863,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			// co vat can
 			else
 			{
+				Obstacle=1;
 				PWM_servo(0);
 				flag_stop = 1;
 				PWM_DC_Servo(0);
 			}
+			
 		}
 		
 		else
 		{
 			PWM_DC_Servo(0);
 		}
+		transmitData[0]=(int)v;
+		transmitData[1]=(int)((v-transmitData[0])*100);
+		transmitData[2]=(int)(Obstacle);
+		HAL_UART_Transmit(&huart2, &transmitData[0], 3, 1);
 	}
 }
 
