@@ -31,5 +31,10 @@ arm_controller_new\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr
 arm_controller_new\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 arm_controller_new\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 arm_controller_new\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+<<<<<<< HEAD
 arm_controller_new\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
 arm_controller_new\main.o: ..\dwt_delay-master\dwt_delay.h
+=======
+arm_controller_new\main.o: ..\dwt_delay-master\dwt_delay.h
+arm_controller_new\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45

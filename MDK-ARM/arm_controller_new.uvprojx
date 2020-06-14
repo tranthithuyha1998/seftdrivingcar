@@ -337,7 +337,11 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
+<<<<<<< HEAD
               <IncludePath>../Inc;    ../Drivers/STM32F4xx_HAL_Driver/Inc;    ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;    ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;    ../Drivers/CMSIS/Include;    ..\dwt_delay-master;    ..\lib</IncludePath>
+=======
+              <IncludePath>../Inc;       ../Drivers/STM32F4xx_HAL_Driver/Inc;       ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;       ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;       ../Drivers/CMSIS/Include;       ..\dwt_delay-master</IncludePath>
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
             </VariousControls>
           </Cads>
           <Aads>
@@ -402,6 +406,7 @@
               <FilePath>..\dwt_delay-master\dwt_delay.h</FilePath>
             </File>
             <File>
+<<<<<<< HEAD
               <FileName>dwt_stm32_delay.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\lib\dwt_stm32_delay.c</FilePath>
@@ -412,6 +417,8 @@
               <FilePath>..\lib\dwt_stm32_delay.h</FilePath>
             </File>
             <File>
+=======
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/main.c</FilePath>

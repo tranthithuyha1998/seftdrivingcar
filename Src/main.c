@@ -10,24 +10,38 @@
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
+<<<<<<< HEAD
   * the "License"; You may not u	se this file except in compliance with the
+=======
+  * the "License"; You may not use this file except in compliance with the
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
   * License. You may obtain a copy of the License at:
   *                        opensource.org/licenses/BSD-3-Clause
   *
   ******************************************************************************
 	SENSOR SONAR
+<<<<<<< HEAD
+=======
+	VCC: 5V
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 	TRIGGER: D9 --- ECHO: B9
 	TRIGGER: D10 --- ECHO: B10
 	TRIGGER: D11 --- ECHO: B11
 		
 	-------------------------------
 	MOTOR DC SERVO - pwm: PE9,   DIR: PE11
+<<<<<<< HEAD
 	M1 ->> OUT4 -->> M4 -->> PE11 (PWM)
 	M2 ->> OUT3 -->> M3 -->> PE9	(DIR)
+=======
+	M1(red) 	->> OUT4 -->> IN4 -->> PE9 (PWM)
+	M2(white) ->> OUT3 -->> IN3 -->> PE11	(DIR)
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 	
 	-------------------------------
 	MOTOR RC SERVO
 	PWM --- PA5 (MAU CAM)
+<<<<<<< HEAD
 	ENCODER:
 	PC6,7
 	-------------------------------
@@ -35,6 +49,19 @@
 		PA2 (TX) ---- RX 
 		PA3 (RX) ---- TX
 		
+=======
+	
+	-------------------------------
+		UART2(STM) ---- (USB)
+		PA2 (TX) ---- RX
+		PA3 (RX) ---- TX
+		
+ ------------------------------
+	ENCODER
+		PC6 
+		PC7
+		
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 */
 
 /* USER CODE END Header */
@@ -45,9 +72,14 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32f4xx.h"
+<<<<<<< HEAD
 //#include "dwt_delay.h" 
 #include "math.h"
 #include "dwt_delay.h"
+=======
+#include "dwt_delay.h" 
+#include "math.h"
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -76,6 +108,7 @@ UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart2_rx;
 
 /* USER CODE BEGIN PV */
+<<<<<<< HEAD
 
 // vr for uart
 float k[2];    // k[0] truoc cham, k[1] sau cham -> k[0],k[1] (float)
@@ -117,6 +150,58 @@ float Ts=0.1;
 double int_DC_PWM = 0;
 double diff_DC_PWM = 0;
 uint16_t enc=0;
+=======
+// volatile float time_sensor1=0, time_sensor2=0, time_sensor3=0, time_sensor4=0; //timer for echo pulse from sensors
+// uint16_t echo_sensor1=0, echo_sensor2=0, echo_sensor3=0, echo_sensor4=0;
+// volatile unsigned int en_sensor1=0, en_sensor2=0, en_sensor3=0, en_sensor4=0;
+volatile float distance1=0, distance2=0, distance3=0, distance4=0;
+volatile uint16_t local_time=0;
+uint8_t ss=0;
+// volatile float alpha=0; 
+// volatile double current_speed_left=0, current_speed_right=0;
+// unsigned int TIM_Period=399;
+signed int upper_limit_sensor=20;
+// volatile unsigned int count_spin=0,count_lost=0,count_track=0;
+// volatile int error_Position=0,error_Distance=0;
+uint8_t receivebuffer[6], transmitData[3];
+uint8_t Obstacle=0;
+uint8_t isStart=0, SttSpeed=0;
+// volatile int pwm_L=0,pwm_R=0;
+// vr for uart
+float k[2]; // k[0] truoc cham, k[1] sau cham -> k[0],k[1] (float)
+uint16_t pre_enc=0;
+float dt=0.1F;
+// vr for encoder
+// uint16_t encCounter;
+// uint16_t vantoc;
+// vr for servo
+float SERVO_MICROS_MAX = 2.5F;
+float SERVO_MICRO_MIN = 0.5F;
+int32_t pulse_length;
+float x=0.2;
+uint16_t f=0;
+float pre_cte, int_cte=0, err=0, steer;
+
+double pi=3.1415927;
+
+float error;
+float Ts=0.1;
+
+uint8_t flag_stop;
+
+// variables for twiddle
+uint8_t flag_td=1; // flag twiddle
+uint8_t td=0; 
+uint16_t it =0;
+float sum_dp, best_err;
+float p[3]={0,0,0}, dp[3]={1,1,1};																																																																																																																													
+
+// float cte, pre_cte, diff_cte, err;
+
+float v = 2.12F;
+float cte;
+float errorRcv;
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -130,6 +215,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM8_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
+<<<<<<< HEAD
 void PWM_servo(int16_t rota);
 void PWM_DC_Servo(int16_t value);
 void delay (uint32_t us);
@@ -141,6 +227,24 @@ void PWM_servo(int16_t rota)
 {
 	rota+=90.0F;
 	  pulse_length=(((SERVO_MICROS_MAX-SERVO_MICRO_MIN)*(float)rota)/180.0F+  SERVO_MICRO_MIN)*50.0F;
+=======
+void PWM_servo(float rota);
+void PWM_DC_Servo(int16_t value);
+void delay (uint32_t us);
+float twiddle(float *p, float *dp, float err);
+float PID_Controller(float errorRcv, uint8_t Sttspeed, float params[], uint16_t n);
+
+//ham xuat dong co, rota(cam)  ----- PA0 	
+void PWM_servo(float rota)
+{
+	if (fabs(rota)>50.0F)
+	{
+		rota= 50.0F*rota/(fabs(rota));
+	}	
+	rota+=100.5F;
+
+	  pulse_length=(((SERVO_MICROS_MAX-SERVO_MICRO_MIN)*(float)rota)/180.0F+SERVO_MICRO_MIN)*50.0F;
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 //	  pulse_length= (2.0F*(float)rota/180.0F+0.5F)*50.0F; //25->125
 	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (int16_t)pulse_length);
 }
@@ -160,6 +264,7 @@ void PWM_DC_Servo(int16_t value)
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, -value);
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, GPIO_PIN_SET);		
 	}
+<<<<<<< HEAD
 	a1=value;
 }
 
@@ -171,6 +276,21 @@ float hcsr04_read (uint16_t GPIO_TRIGGER, uint16_t GPIO_ECHO)
 	HAL_GPIO_WritePin(GPIOD, GPIO_TRIGGER, GPIO_PIN_SET);  // pull the TRIG pin low
 	HAL_Delay(1);
 	HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
+=======
+}
+
+// read sonar sensor
+float hcsr04_read (uint16_t GPIO_TRIGGER, uint16_t GPIO_ECHO)
+{
+	local_time=0;
+	//	DWT_Delay(100);
+	// uint16_t timeout=0;
+	// HAL_GPIO_WritePin(GPIOD, GPIO_TRIGGER, GPIO_PIN_RESET);  // pull the TRIG pin HIGH
+	// DWT_Delay_us(2);  // wait for 2 us
+	HAL_GPIO_WritePin(GPIOD, GPIO_TRIGGER, GPIO_PIN_SET);  // pull the TRIG pin low
+	DWT_Delay(10);  // wait for 10 us
+	
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 	HAL_GPIO_WritePin(GPIOD, GPIO_TRIGGER, GPIO_PIN_RESET);  // pull the TRIG pin HIGH
 	
 	// read the time for which the pin is high
@@ -179,16 +299,24 @@ float hcsr04_read (uint16_t GPIO_TRIGGER, uint16_t GPIO_ECHO)
 
 	while (HAL_GPIO_ReadPin(GPIOB, GPIO_ECHO))    // while the pin is high
 	 {
+<<<<<<< HEAD
 		 
 		local_time++;   // measure time for which the pin is high
 		 // DWT_Delay(2);
 	 }
 	return local_time*0.00876/2;
+=======
+		local_time++;   // measure time for which the pin is high
+		DWT_Delay(1);
+	 }
+	return local_time*0.0526/2;
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 }
 
 // get velocity
 float velocity()
 {
+<<<<<<< HEAD
 	 enc= TIM8->CNT;
 	 TIM8->CNT=0;
 	return(enc*1.3*pi/2387.0F);
@@ -359,6 +487,111 @@ void PID_Controller(float setpt)
 	
 	DC_PWM = -(Kp*Dv + Ki*int_DC_PWM + Kd*diff_DC_PWM);
 	
+=======
+	uint16_t enc= TIM8->CNT;
+	TIM8->CNT=0;
+	return(enc*pi/374.0F);
+}
+//--------------------- 14/05/2020-------------------
+
+//float polyeval(float k[], double x)
+//{
+//	float y=0;
+//	for(int i=0; i< 3 ; i++ )
+//	y+=k[i]*powf(x,3-i);
+//	return y;
+//	}
+
+	/*
+	fast => speed 400
+	slow => speed 200
+	*/
+	
+float PID_Controller(float errorRcv, uint8_t Sttspeed, float params[], uint16_t n)
+{
+	
+	float diff_cte;
+	uint16_t speed;
+	if(Sttspeed==1)
+		speed=900;
+	else if(Sttspeed==0)
+		speed=400;
+		pre_cte = cte;
+	//pre_cte = polyeval(k, 0);
+	f++;
+		cte = errorRcv;
+//	cte = polyeval(k, 0);
+	diff_cte=cte-pre_cte;
+	int_cte+=cte;
+	pre_cte=cte;
+	steer=-params[0]*cte-params[2]*int_cte-params[1]*diff_cte;
+	if (fabs(steer)>50.0F)
+	{
+		steer= 50.0F*steer/(fabs(steer));
+	}
+	PWM_DC_Servo(speed);
+  PWM_servo(steer);
+	
+	if(f>=n)
+	{
+		err += cte*cte;
+	}
+	if(f==2*n)
+	{
+		f=0;	
+	}
+	return err/n;
+}
+
+float twiddle(float *p, float *dp, float err)
+{
+	//p[0]=p[1]=p[2]=0;
+  //dp[0]=dp[1]=dp[2]=1;
+	//float best_err= PID_Controller(errorRcv,2.0, p, 100);
+
+	//if (sum_dp<0.2)
+		//return -1;
+
+	if (flag_td==1)
+	{
+		p[td] +=dp[td];
+		 //err= PID_Controller(errorRcv,2.0,p,100);
+		
+		if (err<best_err)
+		{
+			best_err=err;
+			dp[td] *=1.1F;
+			td=(td+1)%3;
+		}
+		else 
+		{
+			flag_td=0;
+		}
+	}
+	else
+	{
+		flag_td=1;
+		p[td]-=2*dp[td];
+	//	err= PID_Controller(errorRcv,2.0,p,100);
+		
+		if (err<best_err)
+		{
+			best_err =err;
+			dp[td] *=1.1F;
+		}
+		 else 
+		{
+			p[td] +=dp[td];
+			dp[td] *=0.9F;
+		}
+		td=(td+1)%3;
+	}
+	//sum_dp=dp[2]+dp[1]+dp[0];
+//	sum_dp=dp[2]+dp[1]+dp[0];
+	it++;
+	
+	return -1;
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 }
 
 /* USER CODE END PFP */
@@ -373,10 +606,16 @@ void PID_Controller(float setpt)
   * @retval int
   */
 int main(void)
+<<<<<<< HEAD
 {
   /* USER CODE BEGIN 1 */
 
 	
+=======
+																{
+  /* USER CODE BEGIN 1 */
+
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -393,7 +632,10 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
+<<<<<<< HEAD
 	
+=======
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -406,8 +648,12 @@ int main(void)
   MX_TIM8_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+<<<<<<< HEAD
 //	DWT_Init();
 	
+=======
+	DWT_Init();
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
 	HAL_TIM_Base_Start(&htim1);
 	HAL_TIM_Base_Start(&htim2);
@@ -415,8 +661,15 @@ int main(void)
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_TIM_Encoder_Start(&htim8,TIM_CHANNEL_1);
 //	HAL_TIM_Base_Start(&htim4);
+<<<<<<< HEAD
 	HAL_UART_Receive_DMA(&huart2,&receivebuffer[0],5);
 	DWT_Init();
+=======
+	HAL_UART_Receive_DMA(&huart2,&receivebuffer[0],6);
+	//SetPWM_Forward_Backward((int)0);
+	//SetPWM_Forward_Backward((int)0);
+
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -425,7 +678,11 @@ int main(void)
 	//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET);
   while (1)
   {		
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -721,7 +978,11 @@ static void MX_TIM8_Init(void)
   htim8.Instance = TIM8;
   htim8.Init.Prescaler = 0;
   htim8.Init.CounterMode = TIM_COUNTERMODE_UP;
+<<<<<<< HEAD
   htim8.Init.Period = 5000;
+=======
+  htim8.Init.Period = 374;
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
   htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim8.Init.RepetitionCounter = 0;
   htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -863,6 +1124,7 @@ static void MX_GPIO_Init(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim->Instance==htim3.Instance)
 	{
+<<<<<<< HEAD
 //	HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
 //		ss=(ss+1)%3;
 //		if(ss==0)
@@ -941,16 +1203,86 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			PWM_DC_Servo(DC_PWM);
 			*/
 		}
+=======
+		/*
+		ss=(ss+1)%3;
+		if(ss==0)
+		distance1 = hcsr04_read(GPIO_PIN_9, GPIO_PIN_9);
+		else if (ss==1)
+		distance2 = hcsr04_read(GPIO_PIN_10, GPIO_PIN_10);
+		else
+		distance3 =  hcsr04_read(GPIO_PIN_11, GPIO_PIN_11);
+		*/
+		
+		distance1 = 100;
+		distance2 = 100;
+		distance3 = 100;
+		// Get data from Raspberrry through UART
+		v = velocity();
+	
+		//v = 100.60;
+
+		
+		
+			k[0] = receivebuffer[0];
+			//k[0] = (int16_t)(((int16_t)receivebuffer[0]<<8)|(int16_t)receivebuffer[1]);
+			//k[1] = (int16_t)(((int16_t)receivebuffer[2]<<8)|(int16_t)receivebuffer[3]);
+			isStart = receivebuffer[4];
+			SttSpeed = receivebuffer[5];
+			//isStart=1;
+		 	//SttSpeed=0;
+			
+	
+		if (isStart==1)
+		{
+			errorRcv = k[0]-50.0F;
+			upper_limit_sensor =30;
+			if(distance1>upper_limit_sensor && distance2>upper_limit_sensor+10 && 
+				distance3>upper_limit_sensor)
+			{
+				Obstacle =0;
+				//float p[3]={1,0.1,0};
+				err=PID_Controller(errorRcv, SttSpeed, p, 15);
+				
+				sum_dp = dp[0]+dp[1]+dp[2];
+				if ((sum_dp>=0.2F) && (f==0))
+				{
+					twiddle(p, dp, err);
+				}
+			}
+			// co vat can
+			else
+			{
+				Obstacle=1;
+				PWM_servo(0);
+				flag_stop = 1;
+				PWM_DC_Servo(0);
+			}
+			
+		}
+		
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 		else
 		{
 			PWM_DC_Servo(0);
 		}
+<<<<<<< HEAD
 
 		
+=======
+		transmitData[0]=(int)v;
+		transmitData[1]=(int)((v-transmitData[0])*100);
+		transmitData[2]=(int)(Obstacle);
+		HAL_UART_Transmit(&huart2, &transmitData[0], 3, 1);
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 	}
 }
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 /* USER CODE END 4 */
 
 /**

@@ -68,6 +68,10 @@ NVIC.PriorityGroup=NVIC_PRIORITYGROUP_4
 NVIC.SVCall_IRQn=true\:15\:0\:true\:false\:true\:false\:false
 NVIC.SysTick_IRQn=true\:0\:0\:true\:false\:true\:false\:true
 NVIC.TIM3_IRQn=true\:15\:0\:true\:false\:true\:true\:true
+<<<<<<< HEAD
+=======
+NVIC.USART2_IRQn=true\:0\:0\:false\:false\:true\:true\:true
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 NVIC.UsageFault_IRQn=true\:15\:0\:true\:false\:true\:false\:false
 PA13.Mode=Serial_Wire
 PA13.Signal=SYS_JTMS-SWDIO
@@ -228,7 +232,11 @@ TIM3.IPParameters=Prescaler,Period
 TIM3.Period=999
 TIM3.Prescaler=8399
 TIM8.IPParameters=Period
+<<<<<<< HEAD
 TIM8.Period=5000
+=======
+TIM8.Period=374
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 USART2.IPParameters=VirtualMode
 USART2.VirtualMode=VM_ASYNC
 VP_SYS_VS_Systick.Mode=SysTick

@@ -1,5 +1,8 @@
 arm_controller_new\dwt_stm32_delay.o: ..\lib\dwt_stm32_delay.c
+<<<<<<< HEAD
 arm_controller_new\dwt_stm32_delay.o: ..\lib\dwt_stm32_delay.h
+=======
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 arm_controller_new\dwt_stm32_delay.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
 arm_controller_new\dwt_stm32_delay.o: ../Inc/stm32f4xx_hal_conf.h
 arm_controller_new\dwt_stm32_delay.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h
@@ -28,6 +31,13 @@ arm_controller_new\dwt_stm32_delay.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f
 arm_controller_new\dwt_stm32_delay.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h
 arm_controller_new\dwt_stm32_delay.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 arm_controller_new\dwt_stm32_delay.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
+<<<<<<< HEAD
 arm_controller_new\dwt_stm32_delay.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 arm_controller_new\dwt_stm32_delay.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 arm_controller_new\dwt_stm32_delay.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+=======
+arm_controller_new\dwt_stm32_delay.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h
+arm_controller_new\dwt_stm32_delay.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
+arm_controller_new\dwt_stm32_delay.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
+arm_controller_new\dwt_stm32_delay.o: ..\lib\dwt_stm32_delay.h
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45

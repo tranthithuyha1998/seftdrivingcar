@@ -374,6 +374,12 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 
     __HAL_LINKDMA(huart,hdmarx,hdma_usart2_rx);
 
+<<<<<<< HEAD
+=======
+    /* USART2 interrupt Init */
+    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
   /* USER CODE BEGIN USART2_MspInit 1 */
 
   /* USER CODE END USART2_MspInit 1 */
@@ -405,6 +411,12 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 
     /* USART2 DMA DeInit */
     HAL_DMA_DeInit(huart->hdmarx);
+<<<<<<< HEAD
+=======
+
+    /* USART2 interrupt DeInit */
+    HAL_NVIC_DisableIRQ(USART2_IRQn);
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
   /* USER CODE BEGIN USART2_MspDeInit 1 */
 
   /* USER CODE END USART2_MspDeInit 1 */

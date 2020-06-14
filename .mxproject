@@ -1,7 +1,13 @@
 [PreviousGenFiles]
+<<<<<<< HEAD
 HeaderPath=E:/STM/ARM/arm_new_6_6/Inc
 HeaderFiles=stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;
 SourcePath=E:/STM/ARM/arm_new_6_6/Src
+=======
+HeaderPath=E:/LUANVAN2020/Project_2020/STM/arm_new/Inc
+HeaderFiles=stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;
+SourcePath=E:/LUANVAN2020/Project_2020/STM/arm_new/Src
+>>>>>>> 4525c607d7f788c515af0eabedd7d3ae81850b45
 SourceFiles=stm32f4xx_it.c;stm32f4xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]
